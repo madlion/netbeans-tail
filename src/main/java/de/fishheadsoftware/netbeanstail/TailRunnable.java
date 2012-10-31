@@ -26,9 +26,11 @@ public class TailRunnable implements Runnable {
 
     public TailRunnable(File file) {
         this.file = file;
-        filePointer = 0;
+        filePointer = file.length();
         listeners = new ArrayList<ScheduleListener>();
-        inputOutput = IOProvider.getDefault().getIO(String.format("Tail - %s", file.getName()), new Action[0]);
+        final ClearOutputAction clearOutputAction = new ClearOutputAction();
+        inputOutput = IOProvider.getDefault().getIO(String.format("Tail - %s", file.getName()), new Action[] { clearOutputAction });
+        clearOutputAction.setInputOutput(inputOutput);
         IOTab.setToolTipText(inputOutput, String.format("Tail - %s", file.getAbsoluteFile()));
         inputOutput.select();
     }
@@ -43,6 +45,7 @@ public class TailRunnable implements Runnable {
 
             if (fileLength < filePointer) {
                 filePointer = fileLength;
+                inputOutput.getErr().println("File rolled\n\n");
             } else if (fileLength > filePointer) {
                 RandomAccessFile randomAccessFile = null;
                 try {
